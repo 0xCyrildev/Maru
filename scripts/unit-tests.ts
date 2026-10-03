@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
+import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 import { assertClaimId, buildClaim, type Claim, type ClaimInput } from "../src/envelope/claim.js";
@@ -28,7 +29,8 @@ import type { CompositionResult } from "../src/ops/compose.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "..");
-const CORPUS = process.env.CHRASE_CORPUS ?? "/home/zeroxcyril/projects/chase/test-cases/synthetic-leak/sources";
+// Vendored, so a fresh clone needs nothing else on disk; see test/fixtures/NOTICE.md for provenance.
+const CORPUS = process.env.CHRASE_CORPUS ?? join(root, "test/fixtures/synthetic-leak/sources");
 const EMITTED_AT = "2026-10-02T00:00:00.000Z";
 
 function commandRm(path: string): void {
@@ -38,6 +40,7 @@ function commandRm(path: string): void {
 }
 
 const results: { name: string; error: string | null }[] = [];
+const skips: string[] = [];
 
 function test(name: string, fn: () => void): void {
   try {
@@ -295,14 +298,19 @@ const trace = parseTrace(JSON.parse(readFileSync(join(root, "test/fixtures/leak-
 const report = parseAnalysisReport(JSON.parse(readFileSync(join(root, "test/fixtures/leak-mut.report.json"), "utf8")));
 
 test("the adapter's copy of Chase's detector table still matches Chase's source", () => {
-  const chaseSrc = process.env.CHASE_SRC;
-  if (!chaseSrc) {
-    results.push({ name: "drift check NOT RUN — CHASE_SRC unset, so the local table is unverified", error: "UNVERIFIED" });
+  // An unrun control is a visible result, never a pass — but it is also not a *failure*, or every clean
+  // clone of this repo would report red for a missing sibling checkout that has nothing to do with Maru.
+  // Loud skip by default; MARU_REQUIRE_CHASE=1 turns it red, and CI sets it where the source exists.
+  const chaseSrc = process.env.CHASE_SRC ?? join(homedir(), "projects", "chase");
+  const drift = driftCheck(chaseSrc);
+  if (!drift.checked) {
+    skips.push(`drift check NOT RUN — ${drift.reason}`);
+    if (process.env.MARU_REQUIRE_CHASE === "1") {
+      throw new Error("MARU_REQUIRE_CHASE=1 was set and the drift check did not run: " + drift.reason);
+    }
     return;
   }
-  const drift = driftCheck(chaseSrc);
-  assert.ok(drift.checked);
-  assert.deepEqual(drift.differences, []);
+  assert.deepEqual(drift.differences, [], "the adapter's detector table has drifted from Chase's source");
 });
 
 test("the local emission table covers exactly the twelve types Chase emits", () => {
@@ -795,5 +803,6 @@ const failures = results.filter((r) => r.error !== null);
 for (const r of results) {
   console.log(`${r.error === null ? "ok  " : "FAIL"} ${r.name}${r.error ? `\n     ${r.error}` : ""}`);
 }
-console.log(`\n${results.length - failures.length}/${results.length} passed`);
+for (const line of skips) console.log(`SKIP ${line}`);
+console.log(`\n${results.length - failures.length}/${results.length} passed${skips.length ? ` (${skips.length} control(s) not run)` : ""}`);
 if (failures.length > 0) process.exit(1);
