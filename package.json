@@ -1,0 +1,37 @@
+{
+  "name": "@zeroxcyril/maru",
+  "version": "0.0.1",
+  "description": "Signed claim interchange and composition algebra for Web3 security tooling",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "main": "dist/exports.js",
+  "types": "dist/exports.d.ts",
+  "bin": {
+    "maru": "dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs/spec"
+  ],
+  "scripts": {
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.json && node scripts/mark-bins.mjs",
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "tsx scripts/unit-tests.ts",
+    "conformance": "tsx conformance/run.ts",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsx": "^4.23.13",
+    "typescript": "^6.0.3"
+  }
+}

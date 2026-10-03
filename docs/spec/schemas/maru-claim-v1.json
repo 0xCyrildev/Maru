@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maru.dev/schema/claim-v1",
+  "title": "Maru claim v1 (the `predicate` of an in-toto Statement)",
+  "description": "Identity fields are the only ones a verifier recomputes; anything else may change without renumbering the claim. Note that `additionalProperties` is deliberately permissive on nested objects so a registry minor bump does not invalidate existing documents.",
+  "type": "object",
+  "required": [
+    "maru", "claimId", "registryMajor", "channel", "predicate", "subjectUri",
+    "args", "value", "lineage", "witness", "declaredByEmitter", "verifiability", "unverifiableFields",
+    "coercedFields", "droppedFields", "provenance", "methodology", "target",
+    "severitySignal", "limits", "evidence", "emittedAt"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "maru": { "const": "maru/claim/v1" },
+    "claimId": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 over the projection. Content identity: tool, severity, evidence and time are excluded on purpose." },
+    "registryMajor": { "type": "integer", "minimum": 1 },
+    "channel": { "enum": ["assert", "assume"] },
+    "predicate": { "type": "string", "pattern": "^move\\.[a-zA-Z.]+$" },
+    "subjectUri": { "type": "string", "pattern": "^sui:(object|event-type|function|package-module|address-coin|transaction):", "description": "Parts are |-separated; ':' is unusable because Move type strings contain '::'." },
+    "args": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Encoded values keyed by the predicate's declared argument names." },
+    "value": { "type": "string" },
+    "lineage": {
+      "type": "object",
+      "required": ["facet", "key", "basis", "note"],
+      "additionalProperties": false,
+      "properties": {
+        "facet": { "type": "string", "minLength": 1 },
+        "key": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "basis": { "enum": ["derived", "declared"], "description": "derived = the data carries the identity; declared = a human said these shapes are one construct. Never flattened into one." },
+        "note": { "type": ["string", "null"] }
+      }
+    },
+    "witness": { "enum": ["eligible", "report-only"], "description": "An assumption is never eligible; a partial claim is never eligible; model/fallback provenance is never eligible." },
+    "declaredByEmitter": { "enum": ["eligible", "report-only"], "description": "The emitter's own ask, before buildClaim downgrades it. Lets a reader tell a tool that declined to vouch for itself apart from a protocol that overruled the tool." },
+    "verifiability": { "enum": ["full", "partial"] },
+    "unverifiableFields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "field": { "type": "string" },
+          "reason": { "enum": ["truncated", "conditional", "opaque"] }
+        }
+      }
+    },
+    "coercedFields": { "type": "array", "items": { "type": "string" } },
+    "droppedFields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "field": { "type": "string" },
+          "reason": { "enum": ["prose", "not-projected"] }
+        }
+      }
+    },
+    "provenance": { "enum": ["deterministic", "rules", "model", "fallback"], "description": "How the emitter came to know. Conversion is NOT a value here — an importer inherits whatever its source claimed, so `methodology.emitter: \"imported\"` is the structural fact and the one the witness rule keys on." },
+    "methodology": {
+      "type": "object",
+      "required": ["tool", "toolVersion", "check", "checkVersion", "emitter"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "type": "string", "minLength": 1, "description": "Must equal the keyring entry's toolId for the signing key, at emit and at verify." },
+        "toolVersion": { "type": "string" },
+        "check": { "type": "string" },
+        "checkVersion": { "type": "string" },
+        "emitter": { "enum": ["dynamic-trace", "static-source", "imported", "composition"] }
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": ["kind", "network", "digest"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["transaction", "package", "object", "none"] },
+        "network": { "enum": ["mainnet", "testnet", "devnet", "localnet"] },
+        "digest": { "type": ["string", "null"] }
+      }
+    },
+    "severitySignal": { "enum": ["informational", "low", "medium", "high", "critical"], "description": "Carried from the emitter. Composition never merges, raises or averages it, and a composition result has no severity field at all." },
+    "findingMessage": { "type": ["string", "null"] },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^(limit|premise)\\.[a-zA-Z0-9._-]+$" },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "evidence": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Observation only. Never hashed, never compared, never a substitute for a pinnable subject." },
+    "emittedAt": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "channel": { "const": "assume" } } },
+      "then": { "properties": { "witness": { "const": "report-only" } } }
+    },
+    {
+      "if": { "properties": { "verifiability": { "const": "partial" } }, "required": ["verifiability"] },
+      "then": { "properties": { "witness": { "const": "report-only" }, "unverifiableFields": { "minItems": 1 } } }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg",
+  "network": "testnet",
+  "timestamp": "",
+  "sender": "0x4e7a16d751af45ed7741b6a83992ab2af92e3706b43330757a84c2cb6deb7e85",
+  "success": false,
+  "violations": [
+    {
+      "type": "MUTABLE_REFERENCE_RETURNED",
+      "severity": "high",
+      "message": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405::leak::leak_mut returns a mutable reference to the calling transaction; no other non-framework package is invoked in this PTB",
+      "evidence": {
+        "caller": "0x4e7a16d751af45ed7741b6a83992ab2af92e3706b43330757a84c2cb6deb7e85",
+        "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405",
+        "module": "leak",
+        "function": "leak_mut",
+        "commandIndex": 0,
+        "calleePackage": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405",
+        "otherNonFrameworkPackages": [],
+        "crossesPackageBoundaryInThisPtb": false
+      }
+    }
+  ],
+  "detectorErrors": [],
+  "stats": {
+    "balanceChanges": 1,
+    "objectChanges": 2,
+    "ptbCommands": 1,
+    "events": 0,
+    "silentObjectChanges": 0
+  }
+}

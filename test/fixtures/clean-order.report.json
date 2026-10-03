@@ -1,0 +1,16 @@
+{
+  "digest": "5RHbYgCHrtpWEWbc46Cj7DLqybY4moKDQUt6DxpmviR7",
+  "network": "mainnet",
+  "timestamp": "",
+  "sender": "0x1a66b986f6e938c9f6d4cf7b98c97c331165cad5759e13fbbb1dee01728841dd",
+  "success": true,
+  "violations": [],
+  "detectorErrors": [],
+  "stats": {
+    "balanceChanges": 1,
+    "objectChanges": 8,
+    "ptbCommands": 3,
+    "events": 3,
+    "silentObjectChanges": 0
+  }
+}

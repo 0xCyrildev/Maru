@@ -1,0 +1,171 @@
+{
+  "maru": "maru/conformance-fixtures/v1",
+  "registryMajor": 1,
+  "note": "Each fixture is a set of claims and the relations they must or must not produce. must-fire and must-not-fire pairs matter more than either alone: a rule that only ever fires proves nothing about when it should stay quiet. Tool ids are pinned to deterministic test keys by the runner; those keys sign conformance documents and nothing else.",
+  "fixtures": [
+    {
+      "id": "corroborate-two-mechanisms-one-function",
+      "note": "A trace observed a mutable return; the source declares one. Same subject, different lineage, so this is a second opinion about one fact.",
+      "claims": [
+        { "tool": "chase", "check": "mutable-access", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.ref.return.observed", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "mutable", "facet": "trace:resolved-signature|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "informational" },
+        { "tool": "move-static", "check": "declared-return", "emitter": "static-source", "channel": "assert", "predicate": "move.ref.return.declared", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "mutable", "facet": "source:declared-return|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "informational" }
+      ],
+      "expect": { "corroborate": 1, "contradict": 0, "silent": 0, "overlap": 0, "carried": 0, "excluded": 0 }
+    },
+    {
+      "id": "corroborate-must-not-fire-one-facet",
+      "note": "The mirror image: same facet, two claims. One evidence source is one opinion, so nothing corroborates anything.",
+      "claims": [
+        { "tool": "chase", "check": "mutable-access", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.ref.return.observed", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "mutable", "facet": "trace:resolved-signature|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "informational" },
+        { "tool": "chase", "check": "mutable-access", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.ref.return.observed", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "mutable", "facet": "trace:resolved-signature|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "high", "evidence": { "seen": "twice" } }
+      ],
+      "expect": { "corroborate": 0, "overlap": 0, "contradict": 0, "solitary": 1 }
+    },
+    {
+      "id": "overlap-one-construct-two-claims",
+      "note": "Two distinct claims on one facet: teardown-and-replace of a dynamic field is one construct, and it must contribute one opinion.",
+      "claims": [
+        { "tool": "chase", "check": "dynamic-field-lifecycle", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.dynamicField.lifecycle", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg", "keyType": "0x2::k::K" }, "value": "created", "facet": "violation:dynamic-field-lifecycle|0x56b6|0x2::k::K", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" },
+        { "tool": "chase", "check": "dynamic-field-lifecycle", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.dynamicField.lifecycle", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg", "keyType": "0x2::k::K" }, "value": "deleted", "facet": "violation:dynamic-field-lifecycle|0x56b6|0x2::k::K", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ],
+      "expect": { "overlap": 1, "corroborate": 0, "contradict": 1 }
+    },
+    {
+      "id": "contradict-two-assertions-cannot-both-hold",
+      "note": "Two tools, same subject, values the registry declares mutually exclusive. Escalation is blocked and a human is named; nothing here decides which tool is right.",
+      "claims": [
+        { "tool": "chase", "check": "ownership-anomaly", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.ownership", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "shared", "facet": "trace:object-changes|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "medium" },
+        { "tool": "rival-tracer", "check": "owner-reader", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.ownership", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "immutable", "facet": "rpc:getObject|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "medium" }
+      ],
+      "expect": { "contradict": 1, "corroborate": 0, "suppressed": 1 }
+    },
+    {
+      "id": "contradict-must-not-fire-incomparable-predicates",
+      "note": "Same object, two predicates with no shared conflict space. The honest answer is incomparability, and it must never be rendered as agreement.",
+      "claims": [
+        { "tool": "chase", "check": "ownership-anomaly", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.ownership", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "shared", "facet": "trace:object-changes|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "medium" },
+        { "tool": "chase", "check": "token-conservation", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.change", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet", "digest": "FrUvQrMgQ4wPqG4XqEPUW2aBp6rBPTQn2oXk1L8UvXc9" }, "value": "mutated", "facet": "trace:object-changes|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ],
+      "expect": { "contradict": 0, "corroborate": 0, "discharged": 0, "solitary": 2 }
+    },
+    {
+      "id": "silent-premise-falsified-by-source",
+      "note": "The flagship case: a dynamic finding assumes the mutated value is reached inside the module, and a source reader determines the handle was handed over by the caller. The finding is not deleted; its premise is marked unsound.",
+      "claims": [
+        { "tool": "chase", "check": "chase-adapter", "emitter": "dynamic-trace", "channel": "assume", "predicate": "move.value.control", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "internal", "facet": "declared-assumption:value-controlled-internally|leak_mut", "basis": "declared", "witness": "report-only", "provenance": "rules", "severity": "informational" },
+        { "tool": "move-static", "check": "handle-supply", "emitter": "static-source", "channel": "assert", "predicate": "move.value.control", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "caller", "facet": "source:parameter-list|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "informational" }
+      ],
+      "expect": { "silent": 1, "discharged": 0, "undischarged": 0, "contradict": 0, "corroborate": 0 }
+    },
+    {
+      "id": "silent-must-not-fire-when-confirmed",
+      "note": "Same shape, opposite value: the premise is confirmed. That is DISCHARGED, and reporting it as silent would delete a finding that holds up.",
+      "claims": [
+        { "tool": "chase", "check": "chase-adapter", "emitter": "dynamic-trace", "channel": "assume", "predicate": "move.value.control", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "internal", "facet": "declared-assumption:value-controlled-internally|leak_mut", "basis": "declared", "witness": "report-only", "provenance": "rules", "severity": "informational" },
+        { "tool": "move-static", "check": "handle-supply", "emitter": "static-source", "channel": "assert", "predicate": "move.value.control", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "internal", "facet": "source:object-get-mut|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "informational" }
+      ],
+      "expect": { "silent": 0, "discharged": 1, "undischarged": 0, "contradict": 0 }
+    },
+    {
+      "id": "undischarged-nobody-checked-the-premise",
+      "note": "An assumption no other tool addressed. This is a first-class output: a protocol that reports only collisions lets an unchecked premise read as a checked one.",
+      "claims": [
+        { "tool": "chase", "check": "chase-adapter", "emitter": "dynamic-trace", "channel": "assume", "predicate": "move.value.control", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "internal", "facet": "declared-assumption:value-controlled-internally|leak_mut", "basis": "declared", "witness": "report-only", "provenance": "rules", "severity": "informational" },
+        { "tool": "unrelated-tool", "check": "something-else", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.change", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "testnet", "digest": "FrUvQrMgQ4wPqG4XqEPUW2aBp6rBPTQn2oXk1L8UvXc9" }, "value": "mutated", "facet": "other:source|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ],
+      "expect": { "undischarged": 1, "silent": 0, "discharged": 0 }
+    },
+    {
+      "id": "signals-are-carried-not-composed",
+      "note": "Chase's own measured trio — the three types that produced 8 P2s from 2 transactions over 308 mainnet txs. Here they are carried outside the algebra: no corroboration, no contradiction, and nothing to escalate.",
+      "claims": [
+        { "tool": "chase", "check": "flash-loan-shaped", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.finding.signal", "subjectKind": "sui:transaction", "subject": ["FrUvQrMgQ4wPqG4XqEPUW2aBp6rBPTQn2oXk1L8UvXc9"], "args": { "network": "mainnet" }, "value": "FLASH_LOAN_SHAPED", "facet": "detector:flash-loan-shaped|tx", "basis": "derived", "witness": "report-only", "provenance": "rules", "severity": "medium" },
+        { "tool": "chase", "check": "repeated-module-calls", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.finding.signal", "subjectKind": "sui:transaction", "subject": ["FrUvQrMgQ4wPqG4XqEPUW2aBp6rBPTQn2oXk1L8UvXc9"], "args": { "network": "mainnet" }, "value": "REPEATED_MODULE_CALLS", "facet": "detector:repeated-module-calls|tx", "basis": "derived", "witness": "report-only", "provenance": "deterministic", "severity": "low" },
+        { "tool": "chase", "check": "reentrancy-pattern", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.finding.signal", "subjectKind": "sui:transaction", "subject": ["FrUvQrMgQ4wPqG4XqEPUW2aBp6rBPTQn2oXk1L8UvXc9"], "args": { "network": "mainnet" }, "value": "REENTRANCY_PATTERN", "facet": "detector:reentrancy-pattern|tx", "basis": "derived", "witness": "report-only", "provenance": "deterministic", "severity": "medium" }
+      ],
+      "expect": { "corroborate": 0, "contradict": 0, "carried": 3, "overlap": 0 }
+    },
+    {
+      "id": "partial-claim-is-never-a-witness",
+      "note": "An identity-bearing field that could not be pinned. The claim survives and is reported; it cannot corroborate, because a witness whose subject is unpinnable is not a second opinion.",
+      "claims": [
+        { "tool": "chase", "check": "dynamic-field-lifecycle", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.change", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "mutated", "facet": "trace:object-changes|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low", "unverifiable": [{ "field": "parentObject", "reason": "conditional" }] },
+        { "tool": "rival-tracer", "check": "owner-reader", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.change", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "mutated", "facet": "rpc:readEffects|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ],
+      "expect": { "corroborate": 0, "excluded": 1, "solitary": 1 }
+    },
+    {
+      "id": "model-provenance-never-witnesses",
+      "note": "The channel that produced the assertion is the channel under test. A model reading is reported and never counted, so an LLM cannot corroborate itself.",
+      "claims": [
+        { "tool": "chase", "check": "investigator", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.ownership", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "shared", "facet": "model:reading|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "model", "severity": "high" },
+        { "tool": "rival-tracer", "check": "owner-reader", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.ownership", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "shared", "facet": "rpc:getObject|0x56b6", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ],
+      "expect": { "corroborate": 0, "excluded": 1, "solitary": 1 }
+    },
+    {
+      "id": "open-domain-conflicts-when-values-differ",
+      "note": "move.balance.delta has an open domain: any difference is a dispute. Two readers who summed the same coin differently must be told apart, not averaged.",
+      "claims": [
+        { "tool": "chase", "check": "address-balance-delta", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.balance.delta", "subjectKind": "sui:address-coin", "subject": ["0x4e7a16d751af45ed7741b6a83992ab2af92e3706b43330757a84c2cb6deb7e85", "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "-1000", "facet": "trace:balance-changes|sum", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" },
+        { "tool": "rival-tracer", "check": "effects-reader", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.balance.delta", "subjectKind": "sui:address-coin", "subject": ["0x4e7a16d751af45ed7741b6a83992ab2af92e3706b43330757a84c2cb6deb7e85", "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "-1001", "facet": "rpc:readEffects|sum", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ],
+      "expect": { "contradict": 1, "corroborate": 0, "suppressed": 1 }
+    },
+    {
+      "id": "encoder-normalizes-order-not-agreement",
+      "note": "The same command indices listed in a different order. csvsorted normalizes them, so the two claims share one claimId and agree for real — an encoder that failed to normalize would invent a contradiction out of formatting.",
+      "claims": [
+        { "tool": "chase", "check": "repeated-module-calls", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.ptb.calls", "subjectKind": "sui:package-module", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "repeat"], "args": { "network": "testnet", "digest": "FrUvQrMgQ4wPqG4XqEPUW2aBp6rBPTQn2oXk1L8UvXc9" }, "value": ["2", "0", "1"], "facet": "trace:command-index|repeat", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" },
+        { "tool": "rival-tracer", "check": "ptb-reader", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.ptb.calls", "subjectKind": "sui:package-module", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "repeat"], "args": { "network": "testnet", "digest": "FrUvQrMgQ4wPqG4XqEPUW2aBp6rBPTQn2oXk1L8UvXc9" }, "value": ["0", "1", "2"], "facet": "rpc:parseTransaction|repeat", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ],
+      "expect": { "contradict": 0, "corroborate": 1, "overlap": 0 }
+    },
+    {
+      "id": "signature-formatting-is-a-dispute-not-a-noise",
+      "note": "Two source readers who canonicalize the same signature differently collide in an open domain. The protocol does not decide which spelling is right; it records that they cannot both be, and hands it over.",
+      "claims": [
+        { "tool": "move-static", "check": "declared-signature", "emitter": "static-source", "channel": "assert", "predicate": "move.function.signature", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "leak::leak_mut(&mut Vault)->&mut Inner", "facet": "source:signature|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "informational" },
+        { "tool": "other-auditor", "check": "move-compiler-binding", "emitter": "static-source", "channel": "assert", "predicate": "move.function.signature", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "public fun leak(vault: &mut Vault): &mut Inner", "facet": "compiler:ast|leak_mut", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "informational" }
+      ],
+      "expect": { "contradict": 1, "corroborate": 0 }
+    },
+    {
+      "id": "refuse-unknown-predicate",
+      "expectRefuse": "UNKNOWN_PREDICATE",
+      "claims": [
+        { "tool": "chase", "check": "invented", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.reference.outlives.call", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "live", "facet": "x", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "high" }
+      ]
+    },
+    {
+      "id": "refuse-unknown-registry-major",
+      "expectRefuse": "UNKNOWN_REGISTRY_MAJOR",
+      "registryMajor": 7,
+      "claims": [
+        { "tool": "chase", "check": "ownership-anomaly", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.ownership", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "shared", "facet": "x", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ]
+    },
+    {
+      "id": "refuse-out-of-domain-value",
+      "expectRefuse": "UNKNOWN_VALUE",
+      "claims": [
+        { "tool": "chase", "check": "ownership-anomaly", "emitter": "dynamic-trace", "channel": "assert", "predicate": "move.object.ownership", "subjectKind": "sui:object", "subject": ["0x56b65b125b29e6bcfd1cf8dc4bcc0c2e79325684cbad401dfbff75ea0ba862f7"], "args": { "network": "mainnet" }, "value": "unresolved", "facet": "x", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ]
+    },
+    {
+      "id": "refuse-wrong-mechanism-for-predicate",
+      "expectRefuse": "MALFORMED_CLAIM",
+      "note": "A source reader may not assert what a transaction emitted. It may only assume it, which is what keeps `silent` pointing the right way.",
+      "claims": [
+        { "tool": "move-static", "check": "declared-event-presence", "emitter": "static-source", "channel": "assert", "predicate": "move.event.presence", "subjectKind": "sui:package-module", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak"], "args": { "network": "testnet", "digest": "9gwFpqxGmnfUyu8ciiEHHKHmWw42vMJddD6PpUuGLkKg" }, "value": "present", "facet": "x", "basis": "derived", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ]
+    },
+    {
+      "id": "refuse-assumption-as-witness",
+      "expectRefuse": "MALFORMED_CLAIM",
+      "claims": [
+        { "tool": "chase", "check": "chase-adapter", "emitter": "dynamic-trace", "channel": "assume", "predicate": "move.value.control", "subjectKind": "sui:function", "subject": ["0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405", "leak", "leak_mut"], "args": { "package": "0x10172126bb0bc55e32dea70a223b7590da2eecf6a1b40bb2c353f1d750f12405" }, "value": "internal", "facet": "x", "basis": "declared", "witness": "eligible", "provenance": "deterministic", "severity": "low" }
+      ]
+    }
+  ]
+}
